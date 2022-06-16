@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Testing Batch</title>
+</head>
+<body>
+<p>
+    <a href="/batch/test-batch/with">With Batch</a>
+</p>
+<p>
+    <a href="/batch/test-batch/without">Without Batch</a>
+</p>
+
+<div th:each="person : ${people}">
+    <a th:href="@{people/{id}(id=${person.getId()})}" th:text="${person.getName()}"></a>
+</div>
+
+
+
+</body>
+</html>

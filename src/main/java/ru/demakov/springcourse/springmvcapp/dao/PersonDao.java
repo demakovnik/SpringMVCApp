@@ -1,6 +1,8 @@
 package ru.demakov.springcourse.springmvcapp.dao;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.converter.json.GsonBuilderUtils;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -41,5 +43,50 @@ public class PersonDao {
 
     public void delete(int id) {
         jdbcTemplate.update("DELETE FROM Person WHERE id=?", id);
+    }
+
+    public void testWithBatch() {
+        List<Person> people = get1000Persons();
+        long before = System.currentTimeMillis();
+        jdbcTemplate.batchUpdate("INSERT INTO Person(name,surname,age,email) VALUES(?,?,?,?) ",
+                new BatchPreparedStatementSetter() {
+                    @Override
+                    public void setValues(PreparedStatement ps, int i) throws SQLException {
+                        ps.setString(1, people.get(i).getName());
+                        ps.setString(2, people.get(i).getSurname());
+                        ps.setInt(3, people.get(i).getAge());
+                        ps.setString(4,people.get(i).getEmail());
+                    }
+                    @Override
+                    public int getBatchSize() {
+                        return people.size();
+                    }
+                });
+        long after = System.currentTimeMillis();
+        System.out.println("Time is (with batch):" + (after - before));
+    }
+
+    public void testWithoutBatch() {
+        List<Person> people = get1000Persons();
+        long before = System.currentTimeMillis();
+        for (Person person : people) {
+            jdbcTemplate.update("INSERT INTO Person(name,surname,age,email) VALUES(?,?,?,?)"
+            ,person.getName(),person.getSurname(),person.getAge(),person.getEmail());
+        }
+        long after = System.currentTimeMillis();
+        System.out.println("Time is (without batch): " + (after - before));
+    }
+
+    private List<Person> get1000Persons() {
+        List<Person> personList = new ArrayList<>();
+        for(int i = 0;i<1000;i++) {
+            Person person = new Person();
+            person.setName("Name " + i);
+            person.setSurname("Surname " + i);
+            person.setAge(36);
+            person.setEmail("asd@asd.com");
+            personList.add(person);
+        }
+        return personList;
     }
 }
